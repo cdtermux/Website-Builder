@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Builder</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ff7e5f, #feb47b);
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+        header {
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 3em;
+            animation: fadeIn 2s ease-in-out;
+        }
+        textarea {
+            width: 80%;
+            max-width: 600px;
+            height: 150px;
+            padding: 15px;
+            font-size: 1.2em;
+            border-radius: 10px;
+            border: 2px solid #ddd;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            animation: slideIn 1s ease-out;
+            margin-bottom: 20px;
+        }
+        button, a#view-link {
+            background-color: #ff7e5f;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            text-decoration: none;
+        }
+        button:hover, a#view-link:hover {
+            background-color: #feb47b;
+        }
+        a#view-link {
+            display: none;
+            animation: fadeIn 2s ease-in-out;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #ff7e5f;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            display: none;
+            margin-top: 20px;
+        }
+        #error-container {
+            display: none;
+            margin-top: 20px;
+            background-color: #fff;
+            border: 2px solid #ff7e5f;
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 600px;
+            text-align: left;
+        }
+        #error-container h2 {
+            margin-top: 0;
+        }
+        #error-toggle {
+            cursor: pointer;
+            color: #ff7e5f;
+            text-decoration: underline;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+    <script>
+        async function generateCode() {
+            const prompt = document.getElementById('prompt').value;
+            const loader = document.getElementById('loader');
+            const generateButton = document.getElementById('generate-button');
+            const viewLink = document.getElementById('view-link');
+            const errorContainer = document.getElementById('error-container');
+            const errorContent = document.getElementById('error-content');
+
+            generateButton.style.display = 'none';
+            loader.style.display = 'block';
+            errorContainer.style.display = 'none';
+
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ prompt })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    loader.style.display = 'none';
+                    viewLink.href = `/view/${data.folder}/index.html`;
+                    viewLink.style.display = 'block';
+                } else {
+                    throw new Error(data.error || 'An unknown error occurred');
+                }
+            } catch (error) {
+                loader.style.display = 'none';
+                generateButton.style.display = 'block';
+                errorContainer.style.display = 'block';
+                errorContent.textContent = error.message;
+            }
+        }
+
+        function toggleErrorDetails() {
+            const errorContainer = document.getElementById('error-container');
+            if (errorContainer.style.display === 'none' || errorContainer.style.display === '') {
+                errorContainer.style.display = 'block';
+            } else {
+                errorContainer.style.display = 'none';
+            }
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <h1>Website Builder</h1>
+    </header>
+    <textarea id="prompt" rows="10" cols="50" placeholder="Enter your prompt here"></textarea>
+    <br>
+    <button id="generate-button" onclick="generateCode()">Generate</button>
+    <div id="loader" class="loader"></div>
+    <br>
+    <a id="view-link" href="#" target="_blank">View Generated Website</a>
+    <div id="error-container">
+        <h2>Error</h2>
+        <p id="error-content"></p>
+        <span id="error-toggle" onclick="toggleErrorDetails()">Toggle Details</span>
+    </div>
+</body>
+</html>
